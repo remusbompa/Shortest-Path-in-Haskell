@@ -1,0 +1,81 @@
+/*Bompa Remus 325CB*/
+1) SolveSimple
+- aplic algoritmul lui Floyd-Warshall pentru calculul drumului minim
+  dintre oricare doua orase
+- algoritmul foloseste programarea dinamica si structura de date cu acces
+  arbitrar Data.Array.listArray. Dinamica m are trei dimensiuni: (i,j,k)
+  unde: - i-orasul de la care incepe drumul
+          j-orasul unde se termina drumul
+          k-al catelea oras este intre considerat intr i si j
+  astfel incat m(i,j,k) mentine drumul minim intre orasele i si j trecand prin
+  orasele de la 1 la k, salvand rezultatul intru-un tuplu (cost,lista) unde:
+     cost- costul drumului minim obtinut
+     lista- lista oraselor care formeaza drumul minim
+- se adauga in lista t muchiile (i,i) cu costul maxim max folosind functia addIdentic
+  (folosesc valoarea max=1000 pentru lungimea drumurilor atunci cand acestea tind la
+   infinit, deci nu exista drumuri de la i laj, sau cand i=j, deci nu pot considera
+   un drum de la i la i)
+- matricea m se construieste cu ajutorul functiei (completare i j k), unde:
+  - in cazul in care k este 0, se cauta in lista de tupluri t primita la intrare
+    si in cazul in care nu se gaseste muchia (i,j) in t (r==[]), se seteaza
+    in m(i,j,0) costul maxim (am ales costul maxim max de 1000) iar in cazul in care
+    se gaseste muchia in t, se salveaza costul gasit. In ambele cazuri, se creeaza 
+    lista [i,j]. 
+  - in cazul in care k!=0 si i==j, valoarea va fi (max,[])
+  - in cazul in care k!=0 si i!=j, daca costul lui m(i,j,k-1) e <= decat suma costurilor
+    m(i,k,k-1) si m(k,j,k-1), minimul ramane m(i,j,k-1) (distanta minima de la i la j 
+    considerand primele k-1 orase este mai mica decat suma dintre distantele minime de la
+    i la k si de la k si j considerand primele k-1. In cazul in care suma costurilor
+    celor doi termeni e mai mare, atunci termenul (i,j,k) va avea costul: suma celor doua
+    costuri si lista formata prin concatenarea primei liste cu cea de-a doua lista fara
+    primul element (care este considerat si in prima lista).
+  - in cazul in elemenul (1,n,n) are lista de orase ale drumului [] (daca pentru drumul de
+    la 1 la n, se considere toate nodurile intre 1 si n ), rezultatul se formeaza folosind
+    constructorul de date Nothing iar in caz contrar, drumul minim exista, si se foloseste
+    constructorul e date Just cu parametrii: lista si lungimea drumului din m(1,n,n)
+
+2) SolveCosts
+ - aplic acelasi algoritm, insa valoarea unui element m(i,j,k) din dinamica m va fi de data
+   aceasta un tuplu de 3 elemente: (cost,lista,pierderi), unde:
+     -cost => lungimea drumului minim de la nodul i la nodul j considerand ca primele k noduri
+              ar putea fi intre ele
+     -lista => lista pe care o voi folosi pentru a obtine list din rezultatul final si care 
+               contine tupluri de 2 elemente: nodul prin care se trece si pierderile dupa ce 
+               se plateste taxa in el
+     -pierderi => prierderile prin taxe suportate in drumul minim de la i la j considerand ca
+                  primele k noduri ar putea fi intre i si j
+ - completez diferit dinamica m: (completare i j k)
+ - in cazul in care k==0, se cauta in lista de tupluri t primita la intrare si in cazul in care
+   nu se gaseste muchia (i,j) in t (r==[]), se seteaza in m(i,j,0) costul maxim,lista vida si
+   pierderile 0 (max,[],0), iar in caz contrar se salveaza in m(i,j,k) costul gasit si daca 
+   suma initiala si este mai mica decat taxa in j (taxe!!(j-1)), atunci urmatoarele 2 elemente
+   sunt [] si 0, altfel: [(i,0),( j,(taxe!!(j-1)) )]  (se in incepe drumul in orasul i cu 
+   pierderile 0, si se trece in orasul j cu pierderile taxe(i)) si (taxe!!(j-1)) (pierderile
+   totale pe drumul de la i la j )
+ - in cazul in care k!=0 si i==j m(i,,i,k) este (max,[],0)
+ - in cazul in care k!=0 si i!=j, am folosit notatiile:
+	-s => suma pierdrilor drumului minim de la i la j daca intre ele ar exista orasul k
+           (care este suma dintre pierderilor pe drumul de la i la k si pe drumul de la k
+           la j daca intre ele ar putea exista primele k-1 orase) si pierderile drumurilor minime
+           de la 1 la i si de la j la n daca intre ele ar putea exista primele k-1 orase
+	-c1 => true daca nu exista drum de la i la k prin primele k-1 orase si false in caz contrar
+	-c2 => true daca nu exista drum de la k la j prin primele k-1 orase si false in caz contrar
+	-dif =>diferenta dintre lungimea drumului minim de la i la j prin primele k-1 orase si suma
+               dintre lungimile drumurilor minime de la i la k si de la k la j prin primele k-1 orase
+	-dif_pierderi => diferenta dintre pierderile pe drumul minim de la i la j daca intre ele ar
+                         exista primele k-1 orase si suma pierderilor de la i la k si de la k la j
+                         daca intre ele ar exista primele k-1 orase
+        - daca c1 || c2 || (dif<0) || ((dif==0) && (dif_pierderi<=0)) || ( (  si - s  ) < 0 ) atunci
+          m(i,j,k) = m(i,j,k-1)
+        - in caz contrar, drumul minim de la i la j considerand ca ar putea contine primele k orase
+          (m(i,j,k)) il contine pe k si deci: pierderea este suma pierderilor pe m(i,k,k-1) si 
+          m(k,j,k-1)  (pe care o notez s), lista va fi lista din m(i,k,k-1) (pe care o notez st) conca-
+          tenata cu lista din m(k,j,k-1) fara primul element (tail) careia i se aduga pierderea pe 
+          m(i,k,k-1) pierderii fiecarui element din lista folosind operatorul op (lista o notez dr).
+          Lungimea drumului minim este suma lungimilor pentru m(i,k,k-1) si m(k,j,k-1).
+ - in fnal se calculeaza lista care trebuie trimisa ca rezultat alaturi de lungimea minima (care e
+   lungimea minima din m(1,n,n) ): se parcurge lista din m(1,n,n) si se scad pierderile (al doilea
+   element din tuplurile listei ) din suma initiala si, obtinandu-se astfel lista cu orasele si suma
+   de bani ramasa dupa trecerea prin ele
+ - daca aceasta lista e goala se apeleaza constructorul Nothing, altfel se creaza un tip Maybe folosind
+   constructorul Just cu parametrii: lista construita si lungimea minima a drumului construit
